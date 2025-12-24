@@ -45,7 +45,7 @@ Stored in database & displayed in UI
 * React (Vite)
 * Tailwind CSS
 * JavaScript
-* Monaco Editor (VS Code–like editor)
+* (VS Code editor
 
 ### Backend
 
@@ -125,6 +125,37 @@ User
 3. Frontend stores access token securely
 4. Protected APIs require `Authorization: Bearer <token>`
 
+
+🔐 Authentication Methods Breakdown
+1️⃣ Google Sign-in (Gmail)
+User clicks "Sign in with Google"
+  ↓
+Google OAuth popup (frontend)
+  ↓
+Google returns ID token
+  ↓
+Send ID token to Django backend
+  ↓
+Backend verifies token with Google
+  ↓
+Create / fetch user
+  ↓
+Return JWT tokens
+
+
+2️⃣ Phone Number + OTP + Password
+User enters phone number
+  ↓
+Backend sends OTP (SMS)
+  ↓
+User verifies OTP
+  ↓
+User sets password
+  ↓
+JWT issued
+
+
+
 ---
 
 ## 🧠 AI Design (Core Innovation)
@@ -168,7 +199,7 @@ python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py runserver
+python manage.py runserver 0.0.0.0:8000
 ```
 
 ### Frontend Setup
@@ -176,7 +207,7 @@ python manage.py runserver
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev -- --host
 ```
 
 ---

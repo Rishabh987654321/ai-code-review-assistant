@@ -4,11 +4,15 @@ __pycache__/
 *.pyo
 *.pyd
 *.env
+.env
 *.venv
 env/
 venv/
 ENV/
 *.sqlite3
+
+# Media files (user uploads)
+media/
 
 # Django
 *.log
@@ -27,3 +31,5 @@ staticfiles/
 # OS
 .DS_Store
 Thumbs.db
+
+node_modules/
