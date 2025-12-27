@@ -6,7 +6,12 @@ const api = axios.create({
 });
 
 // List of endpoints that don't require authentication
-const publicEndpoints = ["/api/auth/login/", "/api/auth/registration/", "/api/auth/google/"];
+const publicEndpoints = [
+  "/api/auth/login/",
+  "/api/auth/registration/",
+  "/api/auth/google/",
+  "/accounts/github/login/",
+];
 
 api.interceptors.request.use((config) => {
   // Don't add token for public authentication endpoints

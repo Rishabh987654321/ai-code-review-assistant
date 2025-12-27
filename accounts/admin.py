@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User
+from .models import User, GitHubProfile, ConnectedAccount
 
 
 @admin.register(User)
@@ -39,3 +39,21 @@ class UserAdmin(BaseUserAdmin):
         """Optimize queryset with annotations."""
         qs = super().get_queryset(request)
         return qs.prefetch_related('submissions')
+
+
+@admin.register(GitHubProfile)
+class GitHubProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'username', 'github_id', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['user__email', 'username', 'github_id']
+    readonly_fields = ['created_at', 'updated_at']
+    ordering = ['-created_at']
+
+
+@admin.register(ConnectedAccount)
+class ConnectedAccountAdmin(admin.ModelAdmin):
+    list_display = ['user', 'provider', 'provider_uid', 'label', 'last_used', 'created_at']
+    list_filter = ['provider', 'created_at']
+    search_fields = ['user__email', 'provider_uid', 'label']
+    readonly_fields = ['created_at']
+    ordering = ['-created_at']

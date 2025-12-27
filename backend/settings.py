@@ -21,6 +21,10 @@ if not SECRET_KEY:
 DEBUG = os.getenv("DEBUG", "False") == "True"
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
+# Frontend URL for OAuth redirects
+# Default to the IP address if accessing from network, otherwise localhost
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://172.29.104.100:5173")
+
 # Applications
 INSTALLED_APPS = [
     # Django
@@ -46,6 +50,7 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.github",
     "django_filters",
 ]
 
@@ -135,11 +140,25 @@ AUTHENTICATION_BACKENDS = [
 REST_USE_JWT = True
 
 # Social account
+SOCIALACCOUNT_AUTO_SIGNUP = False  # Require explicit linking
+SOCIALACCOUNT_ADAPTER = "accounts.adapters.CustomSocialAccountAdapter"
+# Account adapter for login redirects
+ACCOUNT_ADAPTER = "accounts.adapters.CustomAccountAdapter"
+# Redirect to frontend after OAuth login
+SOCIALACCOUNT_LOGIN_REDIRECT_URL = None  # Use adapter method instead
+ACCOUNT_LOGIN_REDIRECT_URL = None  # Use adapter method instead
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "SCOPE": ["profile", "email"],
         "AUTH_PARAMS": {"access_type": "online"},
-    }
+    },
+    "github": {
+        "SCOPE": [
+            "read:user",
+            "user:email",
+            "repo",
+        ],
+    },
 }
 
 # Static files
