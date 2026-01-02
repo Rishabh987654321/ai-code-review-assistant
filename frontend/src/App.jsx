@@ -6,6 +6,7 @@ import SignUp from "./pages/SignUp";
 import SubmitCode from "./pages/SubmitCode";
 import Profile from "./pages/Profile";
 import GitHubRepos from "./pages/GitHubRepos";
+import ImportedRepos from "./pages/ImportedRepos";
 import ConnectedAccounts from "./pages/ConnectedAccounts";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
@@ -124,6 +125,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <GitHubRepos />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/repositories"
+          element={
+            <ProtectedRoute>
+              <ImportedRepos />
             </ProtectedRoute>
           }
         />

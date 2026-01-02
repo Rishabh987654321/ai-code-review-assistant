@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CodeSubmission
+from .models import CodeSubmission, Repository, RepoSync
 
 
 @admin.register(CodeSubmission)
@@ -51,3 +51,63 @@ class CodeSubmissionAdmin(admin.ModelAdmin):
             pass
         
         return response
+
+
+@admin.register(Repository)
+class RepositoryAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'full_name', 'provider', 'private', 'default_branch', 'created_at']
+    list_filter = ['provider', 'private', 'created_at', 'language']
+    search_fields = ['user__email', 'name', 'full_name', 'owner', 'description']
+    readonly_fields = ['created_at', 'updated_at', 'repo_id']
+    date_hierarchy = 'created_at'
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        ('Repository Info', {
+            'fields': ('user', 'provider', 'provider_account_id', 'repo_id')
+        }),
+        ('GitHub Details', {
+            'fields': ('owner', 'name', 'full_name', 'default_branch', 'html_url')
+        }),
+        ('Metadata', {
+            'fields': ('description', 'private', 'language')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+    
+    def get_queryset(self, request):
+        """Optimize queryset with select_related."""
+        qs = super().get_queryset(request)
+        return qs.select_related('user', 'sync_status')
+
+
+@admin.register(RepoSync)
+class RepoSyncAdmin(admin.ModelAdmin):
+    list_display = ['repository', 'status', 'last_synced', 'files_count', 'branches_count', 'updated_at']
+    list_filter = ['status', 'last_synced', 'updated_at']
+    search_fields = ['repository__full_name', 'repository__user__email', 'last_sync_error']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'last_synced'
+    ordering = ['-updated_at']
+    
+    fieldsets = (
+        ('Repository', {
+            'fields': ('repository',)
+        }),
+        ('Sync Status', {
+            'fields': ('status', 'last_synced', 'last_sync_error')
+        }),
+        ('Sync Metrics', {
+            'fields': ('files_count', 'branches_count')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+    
+    def get_queryset(self, request):
+        """Optimize queryset with select_related."""
+        qs = super().get_queryset(request)
+        return qs.select_related('repository', 'repository__user')

@@ -13,6 +13,7 @@ export default function GitHubRepos() {
   const [checking, setChecking] = useState(true);
   const [githubAccounts, setGithubAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
+  const [importing, setImporting] = useState({});
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
@@ -74,6 +75,35 @@ export default function GitHubRepos() {
     logout();
     toast.success("Logged out successfully");
     navigate("/login");
+  };
+
+  const handleImportRepo = async (repo) => {
+    try {
+      setImporting({ ...importing, [repo.id]: true });
+      
+      const payload = {
+        github_uid: selectedAccount,
+        repo_id: repo.id.toString(),
+        owner: repo.owner?.login || repo.full_name.split('/')[0],
+        name: repo.name,
+        branch: repo.default_branch || "main"
+      };
+
+      const res = await api.post("/api/repositories/import/", payload);
+      
+      toast.success(
+        res.data.message || "Repository imported successfully!"
+      );
+      
+      // Optionally navigate to imported repos page
+      // navigate("/repositories");
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || "Failed to import repository";
+      toast.error(errorMsg);
+      console.error("Import error:", err);
+    } finally {
+      setImporting({ ...importing, [repo.id]: false });
+    }
   };
 
   if (checking) {
@@ -155,13 +185,21 @@ export default function GitHubRepos() {
             )}
             <div className="mb-4 flex justify-between items-center">
               <p className="text-gray-600">Your GitHub repositories</p>
-              <button
-                onClick={() => fetchRepos()}
-                disabled={loading}
-                className="text-blue-600 hover:text-blue-800 disabled:opacity-50"
-              >
-                {loading ? "Loading..." : "Refresh"}
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => navigate("/repositories")}
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm"
+                >
+                  View Imported Repos
+                </button>
+                <button
+                  onClick={() => fetchRepos()}
+                  disabled={loading}
+                  className="text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                >
+                  {loading ? "Loading..." : "Refresh"}
+                </button>
+              </div>
             </div>
 
             {loading && repos.length === 0 ? (
@@ -214,6 +252,13 @@ export default function GitHubRepos() {
                       >
                         View on GitHub →
                       </a>
+                      <button
+                        onClick={() => handleImportRepo(repo)}
+                        disabled={importing[repo.id]}
+                        className="text-green-600 hover:text-green-800 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {importing[repo.id] ? "Importing..." : "Import →"}
+                      </button>
                     </div>
                   </div>
                 ))}
