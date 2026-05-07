@@ -14,12 +14,24 @@ export default function GitHubRepos() {
   const [githubAccounts, setGithubAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [importing, setImporting] = useState({});
+  const [importedRepos, setImportedRepos] = useState([]);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
   useEffect(() => {
     checkGitHubConnection();
+    fetchImportedRepos();
   }, []);
+
+  const fetchImportedRepos = async () => {
+    try {
+      const res = await api.get("/api/repositories/");
+      const repos = res.data.results || res.data;
+      setImportedRepos(repos);
+    } catch (err) {
+      console.error("Failed to fetch imported repos:", err);
+    }
+  };
 
   const checkGitHubConnection = async () => {
     try {
@@ -94,6 +106,9 @@ export default function GitHubRepos() {
       toast.success(
         res.data.message || "Repository imported successfully!"
       );
+      
+      // Refresh imported repos list
+      await fetchImportedRepos();
       
       // Optionally navigate to imported repos page
       // navigate("/repositories");
@@ -213,14 +228,45 @@ export default function GitHubRepos() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {repos.map((repo) => (
+                {repos.map((repo) => {
+                  // Check if repo is already imported
+                  const isImported = importedRepos.some(
+                    (imported) => imported.repo_id === repo.id.toString()
+                  );
+                  const importedRepo = importedRepos.find(
+                    (imported) => imported.repo_id === repo.id.toString()
+                  );
+
+                  const handleCardClick = () => {
+                    if (isImported && importedRepo) {
+                      // Navigate to repository reviews page
+                      navigate(`/repositories/${importedRepo.id}/reviews`);
+                    } else {
+                      // Show message or auto-import
+                      toast("Repository not imported yet. Click 'Import' to add it.", {
+                        icon: "ℹ️",
+                      });
+                    }
+                  };
+
+                  return (
                   <div
                     key={repo.id}
-                    className="border rounded-lg p-4 hover:shadow-md transition"
+                    onClick={handleCardClick}
+                    className={`border rounded-lg p-4 hover:shadow-md transition cursor-pointer ${
+                      isImported ? "border-green-300 bg-green-50" : ""
+                    }`}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-semibold text-lg">{repo.name}</h3>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-lg">{repo.name}</h3>
+                          {isImported && (
+                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                              ✓ Imported
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm text-gray-500">{repo.full_name}</p>
                       </div>
                       {repo.private && (
@@ -243,7 +289,7 @@ export default function GitHubRepos() {
                       )}
                       <span>Updated {new Date(repo.updated_at).toLocaleDateString()}</span>
                     </div>
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-3 flex gap-2" onClick={(e) => e.stopPropagation()}>
                       <a
                         href={repo.html_url}
                         target="_blank"
@@ -252,16 +298,26 @@ export default function GitHubRepos() {
                       >
                         View on GitHub →
                       </a>
-                      <button
-                        onClick={() => handleImportRepo(repo)}
-                        disabled={importing[repo.id]}
-                        className="text-green-600 hover:text-green-800 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {importing[repo.id] ? "Importing..." : "Import →"}
-                      </button>
+                      {isImported ? (
+                        <button
+                          onClick={() => navigate(`/repositories/${importedRepo.id}/reviews`)}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        >
+                          View Repository →
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleImportRepo(repo)}
+                          disabled={importing[repo.id]}
+                          className="text-green-600 hover:text-green-800 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {importing[repo.id] ? "Importing..." : "Import →"}
+                        </button>
+                      )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </>
